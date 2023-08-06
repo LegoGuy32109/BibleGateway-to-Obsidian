@@ -47,8 +47,8 @@ async function getChapter(bookID, chapter) {
   return obj;
 }
 
-function makeFolder(path){
-  const filePath = `${process.cwd()}/${path}`
+function makeFolder(path) {
+  const filePath = `${process.cwd()}/${path}`;
   try {
     if (!fs.existsSync(filePath)) {
       fs.mkdirSync(filePath);
@@ -58,8 +58,8 @@ function makeFolder(path){
   }
 }
 
-function writeFile(path, fileData){
-  const filePath = `${process.cwd()}/${path}`
+function writeFile(path, fileData) {
+  const filePath = `${process.cwd()}/${path}`;
   fs.writeFile(filePath, fileData, function (err) {
     if (err) throw err;
     console.log(`${filePath} Saved!`);
@@ -69,16 +69,21 @@ function writeFile(path, fileData){
 const bible = await getData();
 
 // make file structure
-makeFolder('/Bible')
-makeFolder('/Bible/Genesis')
+makeFolder('/Bible');
+makeFolder('/Bible/Genesis');
 
-let page = '';
+let versePage = '';
+
+let bookPage = '';
 bible[0].forEach(chapter => {
-  page += `# Chapter ${chapter[0].chapterId}\n`;
+  bookPage += `# Chapter ${chapter[0].chapterId}\n`;
   chapter.forEach(verse => {
-    page += `$^{${verse.verseId}}$ ${verse.verse}\n`;
+    versePage += `---\nalias: "${fileNameSpaces}"\nbook: ${JSON.stringify(verse.book)}`;
+    // still working on verse page
+
+    bookPage += `$^{${verse.verseId}}$ ${verse.verse}\n`;
   });
-  page+='\n'
+  bookPage += '\n';
 });
 
-writeFile('/Bible/Genesis.md', page); 
+writeFile('/Bible/Genesis.md', bookPage); 
