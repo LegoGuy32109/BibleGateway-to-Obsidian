@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { dirname } from 'path';
 // /v1/verse/1001001/relations?translation=NIV look into this later
 
 // 66 books in the bible GEN - REV
@@ -46,7 +47,31 @@ async function getChapter(bookID, chapter) {
   return obj;
 }
 
+function makeFolder(path){
+  const filePath = `${process.cwd()}/${path}`
+  try {
+    if (!fs.existsSync(filePath)) {
+      fs.mkdirSync(filePath);
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function writeFile(path, fileData){
+  const filePath = `${process.cwd()}/${path}`
+  fs.writeFile(filePath, fileData, function (err) {
+    if (err) throw err;
+    console.log(`${filePath} Saved!`);
+  });
+}
+
 const bible = await getData();
+
+// make file structure
+makeFolder('/Bible')
+makeFolder('/Bible/Genesis')
+
 let page = '';
 bible[0].forEach(chapter => {
   page += `# Chapter ${chapter[0].chapterId}\n`;
@@ -56,7 +81,4 @@ bible[0].forEach(chapter => {
   page+='\n'
 });
 
-fs.writeFile('Genesis.md', page, function (err) {
-  if (err) throw err;
-  console.log('Genesis Saved!');
-}); 
+writeFile('/Bible/Genesis.md', page); 
