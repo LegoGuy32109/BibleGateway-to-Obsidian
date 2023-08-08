@@ -5,7 +5,7 @@ import fs from "fs";
 async function getData() {
   let bible = [];
   //https://stackoverflow.com/questions/3746725/how-to-create-an-array-containing-1-n/28079480
-  const bookIds = [...Array(20).keys()].map((foo) => foo + 1);
+  const bookIds = [...Array(2).keys()].map((foo) => foo + 1);
 
   await Promise.all(
     bookIds.map(async (bookId) => {
@@ -55,6 +55,22 @@ async function getBooks() {
   return obj;
 }
 
+async function getRelations(verseId) {
+  const response = await fetch(
+    `https://bible-go-api.rkeplin.com/v1/verse/${verseId}/relations?translation=NIV`
+  );
+
+  try {
+    const obj = await response.json();
+    
+    return obj;
+  } catch {
+    return [];
+  }
+  
+}
+
+// Makes a folder in the current directory along the given path
 function makeFolder(path) {
   const filePath = `${process.cwd()}/${path}`;
   try {
@@ -66,6 +82,7 @@ function makeFolder(path) {
   }
 }
 
+// Creates a file with that file data in the current directory along the given path
 function writeFile(path, fileData) {
   const filePath = `${process.cwd()}/${path}`;
   fs.writeFileSync(filePath, fileData);
@@ -87,217 +104,227 @@ function getFileName(verse) {
   return `${verse.book.name}_${verse.chapterId}_${verse.verseId}.md`;
 }
 
+function getFileNameSpaces(verse) {
+  return `${verse.book.name} ${verse.chapterId} ${verse.verseId}`;
+}
+
 // To get the website link to YouVersion bible
-function getYouVersionId(verse) {
-  let abvBook = "";
-  switch (verse.book.name) {
-    case "Genesis":
-      abvBook = "GEN";
-      break;
-    case "Exodus":
-      abvBook = "EXO";
-      break;
-    case "Leviticus":
-      abvBook = "LEV";
-      break;
-    case "Numbers":
-      abvBook = "NUM";
-      break;
-    case "Deuteronomy":
-      abvBook = "DEU";
-      break;
-    case "Joshua":
-      abvBook = "JOS";
-      break;
-    case "Judges":
-      abvBook = "JDG";
-      break;
-    case "Ruth":
-      abvBook = "RUT";
-      break;
-    case "1 Samuel":
-      abvBook = "1SA";
-      break;
-    case "2 Samuel":
-      abvBook = "2SA";
-      break;
-    case "1 Kings":
-      abvBook = "1KI";
-      break;
-    case "2 Kings":
-      abvBook = "2KI";
-      break;
-    case "1 Chronicles":
-      abvBook = "1CH";
-      break;
-    case "2 Chronicles":
-      abvBook = "2CH";
-      break;
-    case "Ezra":
-      abvBook = "EZR";
-      break;
-    case "Nehemiah":
-      abvBook = "NEH";
-      break;
-    case "Esther":
-      abvBook = "EST";
-      break;
-    case "Job":
-      abvBook = "JOB";
-      break;
-    case "Psalms":
-      abvBook = "PSA";
-      break;
-    case "Proverbs":
-      abvBook = "PRO";
-      break;
-    case "Ecclesiastes":
-      abvBook = "ECC";
-      break;
-    case "Song of Solomon":
-      abvBook = "SNG";
-      break;
-    case "Isaiah":
-      abvBook = "ISA";
-      break;
-    case "Jeremiah":
-      abvBook = "JER";
-      break;
-    case "Lamentations":
-      abvBook = "LAM";
-      break;
-    case "Ezekiel":
-      abvBook = "EZK";
-      break;
-    case "Daniel":
-      abvBook = "DAN";
-      break;
-    case "Hosea":
-      abvBook = "HOS";
-      break;
-    case "Joel":
-      abvBook = "JOL";
-      break;
-    case "Amos":
-      abvBook = "AMO";
-      break;
-    case "Obadiah":
-      abvBook = "OBA"; // only 1 chapter
-      break;
-    case "Jonah":
-      abvBook = "JON";
-      break;
-    case "Micah":
-      abvBook = "MIC";
-      break;
-    case "Nahum":
-      abvBook = "NAM";
-      break;
-    case "Habakkuk":
-      abvBook = "HAB";
-      break;
-    case "Zephaniah":
-      abvBook = "ZEP";
-      break;
-    case "Haggai":
-      abvBook = "HAG";
-      break;
-    case "Zechariah":
-      abvBook = "ZEC";
-      break;
-    case "Malachi":
-      abvBook = "MAL";
-      break;
-    case "Matthew":
-      abvBook = "MAT";
-      break;
-    case "Mark":
-      abvBook = "MRK";
-      break;
-    case "Luke":
-      abvBook = "LUK";
-      break;
-    case "John":
-      abvBook = "JHN";
-      break;
-    case "Acts":
-      abvBook = "ACT";
-      break;
-    case "Romans":
-      abvBook = "ROM";
-      break;
-    case "1 Corinthians":
-      abvBook = "1CO";
-      break;
-    case "2 Corinthians":
-      abvBook = "2CO";
-      break;
-    case "Galatians":
-      abvBook = "GAL";
-      break;
-    case "Ephesians":
-      abvBook = "EPH";
-      break;
-    case "Philippians":
-      abvBook = "PHP";
-      break;
-    case "Colossians":
-      abvBook = "COL";
-      break;
-    case "1 Thessalonians":
-      abvBook = "1TH";
-      break;
-    case "2 Thessalonians":
-      abvBook = "2TH";
-      break;
-    case "1 Timothy":
-      abvBook = "1TI";
-      break;
-    case "2 Timothy":
-      abvBook = "2TI";
-      break;
-    case "Titus":
-      abvBook = "TIT";
-      break;
-    case "Philemon":
-      abvBook = "PHM"; // also 1 chapter
-      break;
-    case "Hebrews":
-      abvBook = "HEB";
-      break;
-    case "James":
-      abvBook = "JAS";
-      break;
-    case "1 Peter":
-      abvBook = "1PE";
-      break;
-    case "2 Peter":
-      abvBook = "2PE";
-      break;
-    case "1 John":
-      abvBook = "1JN";
-      break;
-    case "2 John":
-      abvBook = "2JN"; // 1 chapter here
-      break;
-    case "3 John":
-      abvBook = "3JN"; // and here
-      break;
-    case "Jude":
-      abvBook = "JUD"; // oh here too
-      break;
-    case "Revelation":
-      abvBook = "REV";
-      break;
+function getYouVersionURL(verse) {
+  
+  function getYouVersionId(verse) {
+    let abvBook = "";
+    switch (verse.book.name) {
+      case "Genesis":
+        abvBook = "GEN";
+        break;
+      case "Exodus":
+        abvBook = "EXO";
+        break;
+      case "Leviticus":
+        abvBook = "LEV";
+        break;
+      case "Numbers":
+        abvBook = "NUM";
+        break;
+      case "Deuteronomy":
+        abvBook = "DEU";
+        break;
+      case "Joshua":
+        abvBook = "JOS";
+        break;
+      case "Judges":
+        abvBook = "JDG";
+        break;
+      case "Ruth":
+        abvBook = "RUT";
+        break;
+      case "1 Samuel":
+        abvBook = "1SA";
+        break;
+      case "2 Samuel":
+        abvBook = "2SA";
+        break;
+      case "1 Kings":
+        abvBook = "1KI";
+        break;
+      case "2 Kings":
+        abvBook = "2KI";
+        break;
+      case "1 Chronicles":
+        abvBook = "1CH";
+        break;
+      case "2 Chronicles":
+        abvBook = "2CH";
+        break;
+      case "Ezra":
+        abvBook = "EZR";
+        break;
+      case "Nehemiah":
+        abvBook = "NEH";
+        break;
+      case "Esther":
+        abvBook = "EST";
+        break;
+      case "Job":
+        abvBook = "JOB";
+        break;
+      case "Psalms":
+        abvBook = "PSA";
+        break;
+      case "Proverbs":
+        abvBook = "PRO";
+        break;
+      case "Ecclesiastes":
+        abvBook = "ECC";
+        break;
+      case "Song of Solomon":
+        abvBook = "SNG";
+        break;
+      case "Isaiah":
+        abvBook = "ISA";
+        break;
+      case "Jeremiah":
+        abvBook = "JER";
+        break;
+      case "Lamentations":
+        abvBook = "LAM";
+        break;
+      case "Ezekiel":
+        abvBook = "EZK";
+        break;
+      case "Daniel":
+        abvBook = "DAN";
+        break;
+      case "Hosea":
+        abvBook = "HOS";
+        break;
+      case "Joel":
+        abvBook = "JOL";
+        break;
+      case "Amos":
+        abvBook = "AMO";
+        break;
+      case "Obadiah":
+        abvBook = "OBA"; // only 1 chapter
+        break;
+      case "Jonah":
+        abvBook = "JON";
+        break;
+      case "Micah":
+        abvBook = "MIC";
+        break;
+      case "Nahum":
+        abvBook = "NAM";
+        break;
+      case "Habakkuk":
+        abvBook = "HAB";
+        break;
+      case "Zephaniah":
+        abvBook = "ZEP";
+        break;
+      case "Haggai":
+        abvBook = "HAG";
+        break;
+      case "Zechariah":
+        abvBook = "ZEC";
+        break;
+      case "Malachi":
+        abvBook = "MAL";
+        break;
+      case "Matthew":
+        abvBook = "MAT";
+        break;
+      case "Mark":
+        abvBook = "MRK";
+        break;
+      case "Luke":
+        abvBook = "LUK";
+        break;
+      case "John":
+        abvBook = "JHN";
+        break;
+      case "Acts":
+        abvBook = "ACT";
+        break;
+      case "Romans":
+        abvBook = "ROM";
+        break;
+      case "1 Corinthians":
+        abvBook = "1CO";
+        break;
+      case "2 Corinthians":
+        abvBook = "2CO";
+        break;
+      case "Galatians":
+        abvBook = "GAL";
+        break;
+      case "Ephesians":
+        abvBook = "EPH";
+        break;
+      case "Philippians":
+        abvBook = "PHP";
+        break;
+      case "Colossians":
+        abvBook = "COL";
+        break;
+      case "1 Thessalonians":
+        abvBook = "1TH";
+        break;
+      case "2 Thessalonians":
+        abvBook = "2TH";
+        break;
+      case "1 Timothy":
+        abvBook = "1TI";
+        break;
+      case "2 Timothy":
+        abvBook = "2TI";
+        break;
+      case "Titus":
+        abvBook = "TIT";
+        break;
+      case "Philemon":
+        abvBook = "PHM"; // also 1 chapter
+        break;
+      case "Hebrews":
+        abvBook = "HEB";
+        break;
+      case "James":
+        abvBook = "JAS";
+        break;
+      case "1 Peter":
+        abvBook = "1PE";
+        break;
+      case "2 Peter":
+        abvBook = "2PE";
+        break;
+      case "1 John":
+        abvBook = "1JN";
+        break;
+      case "2 John":
+        abvBook = "2JN"; // 1 chapter here
+        break;
+      case "3 John":
+        abvBook = "3JN"; // and here
+        break;
+      case "Jude":
+        abvBook = "JUD"; // oh here too
+        break;
+      case "Revelation":
+        abvBook = "REV";
+        break;
+    }
+    return `${abvBook}.${verse.chapterId}`;
   }
-  return `${abvBook}.${verse.chapterId}`;
+
+  // the url is different for each translation, not just the end
+  return `https://my.bible.com/bible/111/${getYouVersionId(verse)}.NIV`;
 }
 
 // Construct Bible Table of Contents
 makeFolder("/Bible");
 let genre = bookData[0].genre.name;
 let bibleTOC = `# ${genre}\n`;
-bookData.forEach((book, bookIndex, books) => {
+bookData.forEach((book) => {
   if (genre !== book.genre.name) {
     genre = book.genre.name;
     bibleTOC += `\n# ${genre}\n`;
@@ -315,9 +342,9 @@ bible.forEach((book, bookIndex, books) => {
 
     bookPage += `# Chapter ${chapter[0].chapterId}\n`;
 
-    chapter.forEach((verse, verseIndex, verses) => {
+    chapter.forEach(async (verse, verseIndex, verses) => {
       let fileName = getFileName(verse);
-      let fileNameSpaces = fileName.replaceAll("_", " ").replaceAll(".md", "");
+      let fileNameSpaces = getFileNameSpaces(verse);
       let versePage = "";
 
       // Frontmatter for verse page
@@ -384,16 +411,29 @@ bible.forEach((book, bookIndex, books) => {
       }\n`;
 
       // Verse content
-      versePage += `# [${fileNameSpaces}](https://my.bible.com/bible/111/${getYouVersionId(
-        verse
-      )}.NIV)\n`;
+      versePage += `# [${fileNameSpaces}](${getYouVersionURL(verse)})\n`;
       versePage += `${verse.verse}\n\n`;
-      versePage += `# Thoughts\n`;
+      versePage += `# Thoughts\n\n\n`;
 
-      writeFile(`/Bible/${verse.book.name}/` + fileName, versePage);
+      // Verse references in the bible
+      // const relations = await getRelations(verse.id)
+      // if (relations.length > 0){
+      //   versePage +=`# References\n`;
+      // }
+      // relations.forEach(passage => {
+      //   if(passage.length === 1){
+      //     versePage += `![[${getFileName(passage[0])}#[${getFileNameSpaces(passage[0])}](${getYouVersionURL(passage[0])})]]\n\n`
+      //   }else if(passage.length > 1){
+      //     versePage += `This should be multi\n`
+      //     versePage += `![[${getFileName(passage[0])}#[${getFileNameSpaces(passage[0])}](${getYouVersionURL(passage[0])})]]\n\n`
+      //   }
+      // })
 
       // add verse to book
       bookPage += `\n[$^{${verse.verseId}}$](${fileName}) ${verse.verse}\n`;
+
+      writeFile(`/Bible/${verse.book.name}/` + fileName, versePage);
+
     });
 
     bookPage += "\n";
