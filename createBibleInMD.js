@@ -1,11 +1,11 @@
-import fs from "fs";
+import fs, { write } from "fs";
 // /v1/verse/1001001/relations?translation=NIV look into this later
 
 // 66 books in the bible GEN - REV
 async function getData() {
   let bible = [];
   //https://stackoverflow.com/questions/3746725/how-to-create-an-array-containing-1-n/28079480
-  const bookIds = [...Array(2).keys()].map((foo) => foo + 1);
+  const bookIds = [...Array(1).keys()].map((foo) => foo + 1);
 
   await Promise.all(
     bookIds.map(async (bookId) => {
@@ -58,16 +58,17 @@ async function getBooks() {
 async function getRelations(verseId) {
   const response = await fetch(
     `https://bible-go-api.rkeplin.com/v1/verse/${verseId}/relations?translation=NIV`
-  );
+  ).catch((error) => {
+    console.log(`FAILURE FOR ${verseId}`);
+  });
 
   try {
     const obj = await response.json();
-    
+
     return obj;
   } catch {
     return [];
   }
-  
 }
 
 // Makes a folder in the current directory along the given path
@@ -110,7 +111,6 @@ function getFileNameSpaces(verse) {
 
 // To get the website link to YouVersion bible
 function getYouVersionURL(verse) {
-  
   function getYouVersionId(verse) {
     let abvBook = "";
     switch (verse.book.name) {
@@ -342,7 +342,7 @@ bible.forEach((book, bookIndex, books) => {
 
     bookPage += `# Chapter ${chapter[0].chapterId}\n`;
 
-    chapter.forEach(async (verse, verseIndex, verses) => {
+    chapter.forEach((verse, verseIndex, verses) => {
       let fileName = getFileName(verse);
       let fileNameSpaces = getFileNameSpaces(verse);
       let versePage = "";
@@ -433,7 +433,6 @@ bible.forEach((book, bookIndex, books) => {
       bookPage += `\n[$^{${verse.verseId}}$](${fileName}) ${verse.verse}\n`;
 
       writeFile(`/Bible/${verse.book.name}/` + fileName, versePage);
-
     });
 
     bookPage += "\n";
@@ -442,5 +441,41 @@ bible.forEach((book, bookIndex, books) => {
   writeFile(`/Bible/${book[0][0].book.name}.md`, bookPage);
   console.log(`Completed ${book[0][0].book.name}!`);
 });
+
+async function addReferences() {
+  const allVerseIds = bible.flat(3).map((verse) => verse.id);
+
+  const responses = await Promise.all(
+    allVerseIds.map(async (verseId) => {
+      // const verseRefs = await getRelations(verseId);
+      return await fetch(
+        `https://bible-go-api.rkeplin.com/v1/verse/${verseId}/relations?translation=NIV`
+      )
+        .then((res) => {
+          if (res.ok) {
+            return res.json();
+          }
+          return `ERROR READING ${verseId}`;
+        })
+        .catch((error) => {
+          return `FAILURE FOR ${verseId} \n${error}\n`;
+        });
+    })
+  );
+
+  let file = fs.createWriteStream(process.cwd() + "/out.txt");
+  file.on("error", function (err) {
+    console.log(err);
+  });
+  responses.forEach((res) => {
+    file.write(`${res.json()}\n`);
+  });
+  file.on("finish", () => {
+    console.log("finished finding refs");
+  });
+  file.end();
+}
+
+// await addReferences();
 
 console.log(`\n\nDone :)\n`);
