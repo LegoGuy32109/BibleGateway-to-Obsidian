@@ -444,6 +444,7 @@ bible.forEach((book, bookIndex, books) => {
 
 async function addReferences() {
   const allVerseIds = bible.flat(3).map((verse) => verse.id);
+  let failedIds = [];
 
   const responses = await Promise.all(
     allVerseIds.map(async (verseId) => {
@@ -455,25 +456,63 @@ async function addReferences() {
           if (res.ok) {
             return res.json();
           }
+          failedIds.push(verseId);
           return `ERROR READING ${verseId}`;
         })
         .catch((error) => {
+          failedIds.push(verseId);
           return `FAILURE FOR ${verseId} \n${error}\n`;
         });
     })
   );
+
+  console.log(failedIds.length);
+  let failedIds2 = [];
+
+  const responses2 = await Promise.all(
+    failedIds.map(async (verseId) => {
+      return await fetch(
+        `https://bible-go-api.rkeplin.com/v1/verse/${verseId}/relations?translation=NIV`
+      )
+        .then((res) => {
+          if (res.ok) {
+            return res.json();
+          }
+          failedIds2.push(verseId);
+          return `ERROR READING ${verseId}`;
+        })
+        .catch((error) => {
+          failedIds2.push(verseId);
+          return `FAILURE FOR ${verseId} \n${error}\n`;
+        });
+    })
+  )
+
+  console.log(failedIds2.length);
 
   let file = fs.createWriteStream(process.cwd() + "/out.txt");
   file.on("error", function (err) {
     console.log(err);
   });
   responses.forEach((res) => {
-    file.write(`${res.json()}\n`);
+    file.write(`${JSON.stringify(res)}\n`);
   });
   file.on("finish", () => {
     console.log("finished finding refs");
   });
   file.end();
+
+  let file2 = fs.createWriteStream(process.cwd() + "/out2.txt");
+  file2.on("error", function (err) {
+    console.log(err);
+  });
+  responses2.forEach((res) => {
+    file2.write(`${JSON.stringify(res)}\n`);
+  });
+  file2.on("finish", () => {
+    console.log("finished finding refs");
+  });
+  file2.end();
 }
 
 // await addReferences();
