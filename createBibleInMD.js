@@ -1,11 +1,11 @@
-import fs, { write } from "fs";
+import fs from "fs";
 // /v1/verse/1001001/relations?translation=NIV look into this later
 
 // 66 books in the bible GEN - REV
 async function getData() {
   let bible = [];
   //https://stackoverflow.com/questions/3746725/how-to-create-an-array-containing-1-n/28079480
-  const bookIds = [...Array(1).keys()].map((foo) => foo + 1);
+  const bookIds = [...Array(66).keys()].map((foo) => foo + 1);
 
   await Promise.all(
     bookIds.map(async (bookId) => {
@@ -428,6 +428,9 @@ bible.forEach((book, bookIndex, books) => {
       //     versePage += `![[${getFileName(passage[0])}#[${getFileNameSpaces(passage[0])}](${getYouVersionURL(passage[0])})]]\n\n`
       //   }
       // })
+
+      // add references link
+      versePage += `## [Cross References](https://bible-ui.rkeplin.com/book/niv/${verse.book.id}/${verse.chapterId})`
 
       // add verse to book
       bookPage += `\n[$^{${verse.verseId}}$](${fileName}) ${verse.verse}\n`;
