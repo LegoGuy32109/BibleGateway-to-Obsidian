@@ -87,9 +87,6 @@ function getFileName(verse) {
   return `${verse.book.name}_${verse.chapterId}_${verse.verseId}.md`;
 }
 
-function getFileNameSpaces(verse) {
-  return `${verse.book.name} ${verse.chapterId} ${verse.verseId}`;
-}
 
 // To get the website link to YouVersion bible
 function getYouVersionURL(verse) {
@@ -319,31 +316,25 @@ console.log("Completed Bible TOC!");
 // Construct Book Pages and Verse Pages
 bible.forEach((book, bookIndex, books) => {
   let bookPage = "";
+
+  // Book navigation
+  let prevBook, nextBook;
+
+  // is there a previous book?
+  if (!prevBook && bookIndex > 0) {
+    prevBook = books[bookIndex - 1];
+  }
+  // is there a next book?
+  if (!nextBook && bookIndex !== books.length) {
+    nextBook = books[bookIndex + 1];
+  }
+  
   book.forEach((chapter, chapterIndex, chapters) => {
     bookPage += `# Chapter ${chapter[0].chapterId}\n`;
 
     chapter.forEach((verse, verseIndex, verses) => {
-      let fileName = getFileName(verse);
-      let fileNameSpaces = getFileNameSpaces(verse);
       let versePage = "";
-
-      // Book navigation
-      let prevBook, nextBook;
-
-      // is there a previous book?
-      if (!prevBook && bookIndex > 0) {
-        let prevBook = books[bookIndex - 1];
-        prevBook = prevBook
-          ? prevBook[prevBook.length - 1][
-              prevBook[prevBook.length - 1].length - 1
-            ]
-          : null;
-      }
-      // is there a next book?
-      if (!nextBook && bookIndex !== books.length) {
-        let nextBook = books[bookIndex + 1];
-        nextBook = nextBook ? nextBook[0][0] : null;
-      }
+      
 
       // only include a column if the book exists
       versePage += `| ${prevBook ? "Previous | " : ""}Book | ${
