@@ -1,10 +1,8 @@
 import fs from "fs";
-// /v1/verse/1001001/relations?translation=NIV look into this later
 
-// 66 books in the bible GEN - REV
 async function getData() {
   let bible = [];
-  //https://stackoverflow.com/questions/3746725/how-to-create-an-array-containing-1-n/28079480
+  // 66 books in the bible GEN - REV
   const bookIds = [...Array(66).keys()].map((foo) => foo + 1);
 
   await Promise.all(
@@ -24,7 +22,6 @@ async function getData() {
   return bible;
 }
 
-// Helper funcs :)
 
 async function getNumChapters(bookId) {
   const response = await fetch(
@@ -55,21 +52,6 @@ async function getBooks() {
   return obj;
 }
 
-async function getRelations(verseId) {
-  const response = await fetch(
-    `https://bible-go-api.rkeplin.com/v1/verse/${verseId}/relations?translation=NIV`
-  ).catch((error) => {
-    console.log(`FAILURE FOR ${verseId}`);
-  });
-
-  try {
-    const obj = await response.json();
-
-    return obj;
-  } catch {
-    return [];
-  }
-}
 
 // Makes a folder in the current directory along the given path
 function makeFolder(path) {
@@ -338,8 +320,6 @@ console.log("Completed Bible TOC!");
 bible.forEach((book, bookIndex, books) => {
   let bookPage = "";
   book.forEach((chapter, chapterIndex, chapters) => {
-    makeFolder(`/Bible/${book[0][0].book.name}`);
-
     bookPage += `# Chapter ${chapter[0].chapterId}\n`;
 
     chapter.forEach((verse, verseIndex, verses) => {
@@ -347,95 +327,56 @@ bible.forEach((book, bookIndex, books) => {
       let fileNameSpaces = getFileNameSpaces(verse);
       let versePage = "";
 
-      // Frontmatter for verse page
-      versePage += `---\n`;
-      versePage += `alias: "${fileNameSpaces}"\n`;
-      versePage += `book: ${JSON.stringify(verse.book)}\n`;
-      versePage += `chapterId: ${verse.chapterId}\n`;
-      versePage += `verseId: ${verse.verseId}\n`;
-      versePage += `id: ${verse.id}\n`;
-      versePage += `---\n\n`;
-
-      // Verse navigation
-      let prevVerse = verseIndex > 0 ? verses[verseIndex - 1] : null;
-      let nextVerse =
-        verseIndex !== verses.length ? verses[verseIndex + 1] : null;
-
-      // is there a previous chapter?
-      if (!prevVerse && chapterIndex > 0) {
-        let prevChapter = chapters[chapterIndex - 1];
-        prevVerse = prevChapter ? prevChapter[prevChapter.length - 1] : null;
-      }
-      // is there a next chapter?
-      if (!nextVerse && chapterIndex !== chapters.length) {
-        let nextChapter = chapters[chapterIndex + 1];
-        nextVerse = nextChapter ? nextChapter[0] : null;
-      }
+      // Book navigation
+      let prevBook, nextBook;
 
       // is there a previous book?
-      if (!prevVerse && bookIndex > 0) {
+      if (!prevBook && bookIndex > 0) {
         let prevBook = books[bookIndex - 1];
-        prevVerse = prevBook
+        prevBook = prevBook
           ? prevBook[prevBook.length - 1][
               prevBook[prevBook.length - 1].length - 1
             ]
           : null;
       }
       // is there a next book?
-      if (!nextVerse && bookIndex !== books.length) {
+      if (!nextBook && bookIndex !== books.length) {
         let nextBook = books[bookIndex + 1];
-        nextVerse = nextBook ? nextBook[0][0] : null;
+        nextBook = nextBook ? nextBook[0][0] : null;
       }
 
-      // only include a column if the verse exists
-      versePage += `| ${prevVerse ? "Previous | " : ""}Book | ${
-        nextVerse ? "Next | " : ""
+      // only include a column if the book exists
+      versePage += `| ${prevBook ? "Previous | " : ""}Book | ${
+        nextBook ? "Next | " : ""
       }\n`;
-      versePage += `| ${prevVerse ? "---: | " : ""}:---: | ${
-        nextVerse ? ":--- | " : ""
+      versePage += `| ${prevBook ? "---: | " : ""}:---: | ${
+        nextBook ? ":--- | " : ""
       }\n`;
       versePage += `| ${
-        prevVerse
-          ? `[[${getFileName(prevVerse)}\\|← ${prevVerse.book.name} ${
-              prevVerse.chapterId
-            } ${prevVerse.verseId}]] | `
+        prevBook
+          ? `[[${getFileName(prevBook)}\\|← ${prevBook.book.name} ${
+              prevBook.chapterId
+            } ${prevBook.verseId}]] | `
           : ""
       }[[${verse.book.name}#Chapter ${verse.chapterId}\\|${
         verse.book.name
       }]] | ${
-        nextVerse
-          ? `[[${getFileName(nextVerse)}\\|${nextVerse.book.name} ${
-              nextVerse.chapterId
-            } ${nextVerse.verseId} →]] |`
+        nextBook
+          ? `[[${getFileName(nextBook)}\\|${nextBook.book.name} ${
+              nextBook.chapterId
+            } ${nextBook.verseId} →]] |`
           : ""
       }\n`;
 
       // Verse content
       versePage += `# [${fileNameSpaces}](${getYouVersionURL(verse)})\n`;
-      versePage += `${verse.verse}\n\n`;
-      versePage += `# Thoughts\n\n\n`;
 
-      // Verse references in the bible
-      // const relations = await getRelations(verse.id)
-      // if (relations.length > 0){
-      //   versePage +=`# References\n`;
-      // }
-      // relations.forEach(passage => {
-      //   if(passage.length === 1){
-      //     versePage += `![[${getFileName(passage[0])}#[${getFileNameSpaces(passage[0])}](${getYouVersionURL(passage[0])})]]\n\n`
-      //   }else if(passage.length > 1){
-      //     versePage += `This should be multi\n`
-      //     versePage += `![[${getFileName(passage[0])}#[${getFileNameSpaces(passage[0])}](${getYouVersionURL(passage[0])})]]\n\n`
-      //   }
-      // })
 
       // add references link
       versePage += `## [Cross References](https://bible-ui.rkeplin.com/book/niv/${verse.book.id}/${verse.chapterId})`
 
       // add verse to book
-      bookPage += `\n[$^{${verse.verseId}}$](${fileName}) ${verse.verse}\n`;
-
-      writeFile(`/Bible/${verse.book.name}/` + fileName, versePage);
+      bookPage += `\n$^{${verse.verseId}}$ ${verse.verse}\n`;
     });
 
     bookPage += "\n";
@@ -445,79 +386,5 @@ bible.forEach((book, bookIndex, books) => {
   console.log(`Completed ${book[0][0].book.name}!`);
 });
 
-async function addReferences() {
-  const allVerseIds = bible.flat(3).map((verse) => verse.id);
-  let failedIds = [];
-
-  const responses = await Promise.all(
-    allVerseIds.map(async (verseId) => {
-      // const verseRefs = await getRelations(verseId);
-      return await fetch(
-        `https://bible-go-api.rkeplin.com/v1/verse/${verseId}/relations?translation=NIV`
-      )
-        .then((res) => {
-          if (res.ok) {
-            return res.json();
-          }
-          failedIds.push(verseId);
-          return `ERROR READING ${verseId}`;
-        })
-        .catch((error) => {
-          failedIds.push(verseId);
-          return `FAILURE FOR ${verseId} \n${error}\n`;
-        });
-    })
-  );
-
-  console.log(failedIds.length);
-  let failedIds2 = [];
-
-  const responses2 = await Promise.all(
-    failedIds.map(async (verseId) => {
-      return await fetch(
-        `https://bible-go-api.rkeplin.com/v1/verse/${verseId}/relations?translation=NIV`
-      )
-        .then((res) => {
-          if (res.ok) {
-            return res.json();
-          }
-          failedIds2.push(verseId);
-          return `ERROR READING ${verseId}`;
-        })
-        .catch((error) => {
-          failedIds2.push(verseId);
-          return `FAILURE FOR ${verseId} \n${error}\n`;
-        });
-    })
-  )
-
-  console.log(failedIds2.length);
-
-  let file = fs.createWriteStream(process.cwd() + "/out.txt");
-  file.on("error", function (err) {
-    console.log(err);
-  });
-  responses.forEach((res) => {
-    file.write(`${JSON.stringify(res)}\n`);
-  });
-  file.on("finish", () => {
-    console.log("finished finding refs");
-  });
-  file.end();
-
-  let file2 = fs.createWriteStream(process.cwd() + "/out2.txt");
-  file2.on("error", function (err) {
-    console.log(err);
-  });
-  responses2.forEach((res) => {
-    file2.write(`${JSON.stringify(res)}\n`);
-  });
-  file2.on("finish", () => {
-    console.log("finished finding refs");
-  });
-  file2.end();
-}
-
-// await addReferences();
 
 console.log(`\n\nDone :)\n`);
